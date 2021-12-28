@@ -27,7 +27,7 @@ model = dict(
             ),
             reduction='mean')
     ])
-dataroot = './data/horse2zebra'
+dataroot = './data/unpaired/horse2zebra'
 train_pipeline = [
     dict(
         type='LoadImageFromFile',

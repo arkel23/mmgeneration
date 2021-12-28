@@ -4,8 +4,8 @@ _base_ = [
     '../_base_/default_runtime.py'
 ]
 
-domain_a = 'horse'
-domain_b = 'zebra'
+domain_a = 'bw'
+domain_b = 'color'
 model = dict(
     default_domain=domain_b,
     reachable_domains=[domain_a, domain_b],
@@ -42,7 +42,7 @@ model = dict(
                 pred=f'identity_{domain_b}', target=f'real_{domain_b}'),
             reduction='mean')
     ])
-dataroot = './data/unpaired/horse2zebra'
+dataroot = './data/unpaired/moe_linear'
 train_pipeline = [
     dict(
         type='LoadImageFromFile',
@@ -146,7 +146,7 @@ runner = None
 use_ddp_wrapper = True
 total_iters = 270000
 workflow = [('train', 1)]
-exp_name = 'cyclegan_horse2zebra'
+exp_name = 'cyclegan_moe_linear'
 work_dir = f'./work_dirs/experiments/{exp_name}'
 # testA 120, testB 140
 num_images = 140
