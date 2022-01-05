@@ -1,6 +1,7 @@
 # logs
 *.out
 *.nfs*
+**/wandb/
 # **/results/**
 
 # Byte-compiled / optimized / DLL files

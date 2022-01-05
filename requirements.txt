@@ -1,2 +1,5 @@
 -r requirements/runtime.txt
 -r requirements/tests.txt
+googledrivedownloader==0.4
+gdown==4.2.0
+wandb==0.12.9

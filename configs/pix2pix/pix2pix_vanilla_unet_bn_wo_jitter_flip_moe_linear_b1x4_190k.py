@@ -151,3 +151,13 @@ evaluation = dict(
             inception_args=dict(type='pytorch'))
     ],
     best_metric=['fid', 'is'])
+
+# log
+log_config = dict(
+    # init_kwargs=exp_name,
+    by_epoch=True,
+    interval=50,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        dict(type='WandbLoggerHook')
+    ])
