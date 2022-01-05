@@ -7,6 +7,8 @@ import numpy as np
 from PIL import Image
 from skimage.transform import resize
 
+from transformations import convert_image
+
 
 def search_images(args):
     # the tuple of file types
@@ -29,18 +31,6 @@ def read_image(fp):
     if img.mode != 'RGB':
         img = img.convert('RGB')
     return img
-
-
-def convert_linear(img):
-    return img.convert('L')
-
-
-def convert_image(args, img):
-    if args.preprocess == 'linear':
-        img_new = convert_linear(img)
-    else:
-        raise NotImplementedError
-    return img_new
 
 
 def get_save_folder_name(i, no_train, args, sub_folder_name):
@@ -134,7 +124,7 @@ def main():
                         default='linear', help='greyscale/sketch conversion')
     parser.add_argument('--train', type=float, default=0.99,
                         help='percent of data for training')
-    parser.add_argument('--res_hw', type=int, default=128,
+    parser.add_argument('--res_hw', type=int, default=256,
                         help='resized height and width')
     args = parser.parse_args()
 

@@ -6,6 +6,8 @@ _base_ = [
 
 domain_a = 'bw'
 domain_b = 'color'
+img_norm_cfg = dict(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+
 model = dict(
     default_domain=domain_b,
     reachable_domains=[domain_a, domain_b],
@@ -108,6 +110,31 @@ test_pipeline = [
         keys=[f'img_{domain_a}', f'img_{domain_b}'],
         meta_keys=[f'img_{domain_a}_path', f'img_{domain_b}_path'])
 ]
+
+inference_pipeline = [
+    dict(
+        type='LoadImageFromFile',
+        io_backend='disk',
+        key=f'img_{domain_a}',
+        flag='color'),
+    dict(
+        type='Resize',
+        keys=[f'img_{domain_a}'],
+        scale=(256, 256),
+        interpolation='bicubic'),
+    dict(type='RescaleToZeroOne', keys=[f'img_{domain_a}']),
+    dict(
+        type='Normalize',
+        keys=[f'img_{domain_a}'],
+        to_rgb=False,
+        **img_norm_cfg),
+    dict(type='ImageToTensor', keys=[f'img_{domain_a}']),
+    dict(
+        type='Collect',
+        keys=[f'img_{domain_a}'],
+        meta_keys=[f'img_{domain_a}_path'])
+]
+
 data = dict(
     train=dict(
         dataroot=dataroot,
