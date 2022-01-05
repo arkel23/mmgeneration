@@ -1,7 +1,9 @@
 # Data preparation
-## Download dataset
+## Download dataset and ckpt
 Use flags depending on which datasets to download:
-`python download_extract_data.py --moe #--faces --full --icf_train --icf_test`
+`python download_extract_data.py --moe #--faces --full --icf_train --icf_test --ckpt_sketch --ckpt_aoda`
+
+`mv model.pth ckpt`
 
 ## Prepare raw (RGB) data for paired or unpaired translation
 Use `prepare_dataset.py` to make data into paired or unpaired folders 

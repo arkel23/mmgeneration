@@ -9,6 +9,12 @@ def main():
     parser.add_argument('--moe', action='store_true', help='dl moeimouto')
     parser.add_argument('--icf_train', action='store_true', help='dl cf train')
     parser.add_argument('--icf_test', action='store_true', help='dl cf test')
+
+    parser.add_argument('--ckpt_sketch', action='store_true',
+                        help='sketchkeras ckpt')
+    parser.add_argument('--ckpt_aoda', action='store_true',
+                        help='AODA ckpt')
+
     args = parser.parse_args()
 
     if args.faces:
@@ -32,6 +38,15 @@ def main():
         gdd.download_file_from_google_drive(
             file_id='1lUq5-BgNgqj-gIP33XLiLyJL10gQupza',
             dest_path='./personai_icartoonface_rectest.zip', unzip=True)
+
+    if args.ckpt_sketch:
+        gdd.download_file_from_google_drive(
+            file_id='1Zo88NmWoAitO7DnyBrRhKXPcHyMAZS97',
+            dest_path='./model.pth', unzip=False)
+    if args.ckpt_aoda:
+        gdd.download_file_from_google_drive(
+            file_id='1RILKwUdjjBBngB17JHwhZNBEaW4Mr-Ml',
+            dest_path='./model.pth', unzip=False)
 
 
 if __name__ == '__main__':

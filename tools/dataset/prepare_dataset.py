@@ -8,6 +8,15 @@ from PIL import Image
 from skimage.transform import resize
 
 from transformations import convert_image
+from build_sketchkeras import get_sketchkeras
+from build_aoda import get_aoda
+from build_pidinet import get_pidinet
+
+
+ALGOS_TRAD = ['linear', 'canny', 'xdog', 'xdog_th', 'xdog_serial']
+ALGOS_DL = ['sketchkeras', 'aoda',
+            'pidinet_-1', 'pidinet_0', 'pidinet_1', 'pidinet_2', 'pidinet_3']
+ALGOS = ALGOS_TRAD + ALGOS_DL
 
 
 def search_images(args):
@@ -24,6 +33,19 @@ def search_images(args):
 
     print('Total image files: ', len(files_all))
     return files_all
+
+
+def get_model(args):
+    if args.preprocess in ALGOS_DL:
+        if args.preprocess == 'sketchkeras':
+            model = get_sketchkeras()
+        elif args.preprocess == 'aoda':
+            model = get_aoda()
+        elif 'pidinet' in args.preprocess:
+            model = get_pidinet()
+    else:
+        model = None
+    return model
 
 
 def read_image(fp):
@@ -93,11 +115,13 @@ def preprocess_folder(args):
     no_train = int(no_images * args.train)
     no_val = no_images - no_train
 
+    model = get_model(args)
+
     for i, fp in enumerate(files_all):
         abs_path, fn = osp.split(osp.normpath(fp))
         _, sub_folder_name = osp.split(abs_path)
         img = read_image(fp)
-        img_new = convert_image(args, img)
+        img_new = convert_image(args, img, model)
 
         folder_name = get_save_folder_name(i, no_train, args, sub_folder_name)
         save_image(args, img, img_new, folder_name, fn)
@@ -112,16 +136,20 @@ def preprocess_folder(args):
 def main():
     '''takes a folder with images and applies a transformation to all images'''
     parser = argparse.ArgumentParser()
-    parser.add_argument('--path_images', type=str,
+    parser.add_argument('--path_images', type=str, required=True,
                         help='folder with images to convert')
-    parser.add_argument('--path_save', type=str,
+    parser.add_argument('--path_save', type=str, required=True,
                         help='folder to save new paired images')
     parser.add_argument('--print_freq',
                         type=int, default=1000, help='printfreq')
+
     parser.add_argument('--unpaired', action='store_true',
                         help='Use for unpaired (cycleGAN style) datasets')
-    parser.add_argument('--preprocess', type=str, choices=['linear'],
+    parser.add_argument('--preprocess', type=str, choices=ALGOS,
                         default='linear', help='greyscale/sketch conversion')
+    parser.add_argument('--sigma', type=float, default=0.3, 
+                        choices=[0.3, 0.4, 0.5], help='sigma for xdog_serial')
+
     parser.add_argument('--train', type=float, default=0.99,
                         help='percent of data for training')
     parser.add_argument('--res_hw', type=int, default=256,
