@@ -1,6 +1,7 @@
 _base_ = [
-    '../_base_/models/pix2pix/pix2pix_vanilla_unet_bn.py',
-    '../_base_/datasets/paired_imgs_256x256.py', '../_base_/default_runtime.py'
+    '../../../_base_/models/pix2pix/pix2pix_vanilla_unet_bn.py',
+    '../../../_base_/datasets/paired_imgs_256x256.py',
+    '../../../_base_/default_runtime.py'
 ]
 source_domain = 'bw'
 target_domain = 'color'
@@ -100,10 +101,11 @@ inference_pipeline = [
 ]
 
 dataroot = 'data/paired/moe_linear'
+dataroot_test = 'data/paired/test_daf_faces_0000'
 data = dict(
     train=dict(dataroot=dataroot, pipeline=train_pipeline),
-    val=dict(dataroot=dataroot, pipeline=test_pipeline, testdir='val'),
-    test=dict(dataroot=dataroot, pipeline=test_pipeline, testdir='val'))
+    val=dict(dataroot=dataroot_test, pipeline=test_pipeline, testdir='val'),
+    test=dict(dataroot=dataroot_test, pipeline=test_pipeline, testdir='val'))
 
 # optimizer
 optimizer = dict(
@@ -128,9 +130,9 @@ use_ddp_wrapper = True
 # runtime settings
 total_iters = 190000
 workflow = [('train', 1)]
-exp_name = 'pix2pix_moe_linear_wo_jitter_flip'
+exp_name = 'pix2pix_moe_linear'
 work_dir = f'./work_dirs/experiments/{exp_name}'
-num_images = 200
+num_images = 100
 metrics = dict(
     FID=dict(type='FID', num_images=num_images, image_shape=(3, 256, 256)),
     IS=dict(

@@ -3,7 +3,6 @@ _base_ = [
     '../_base_/datasets/unpaired_imgs_256x256.py',
     '../_base_/default_runtime.py'
 ]
-
 domain_a = 'bw'
 domain_b = 'color'
 img_norm_cfg = dict(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
@@ -28,23 +27,10 @@ model = dict(
                 pred=f'cycle_{domain_b}',
                 target=f'real_{domain_b}',
             ),
-            reduction='mean'),
-        dict(
-            type='L1Loss',
-            loss_weight=0.5,
-            loss_name='id_loss',
-            data_info=dict(
-                pred=f'identity_{domain_a}', target=f'real_{domain_a}'),
-            reduction='mean'),
-        dict(
-            type='L1Loss',
-            loss_weight=0.5,
-            loss_name='id_loss',
-            data_info=dict(
-                pred=f'identity_{domain_b}', target=f'real_{domain_b}'),
             reduction='mean')
     ])
 dataroot = './data/unpaired/moe_linear'
+dataroot_test = 'data/paired/test_daf_faces_0000'
 train_pipeline = [
     dict(
         type='LoadImageFromFile',
@@ -81,6 +67,7 @@ train_pipeline = [
         keys=[f'img_{domain_a}', f'img_{domain_b}'],
         meta_keys=[f'img_{domain_a}_path', f'img_{domain_b}_path'])
 ]
+
 test_pipeline = [
     dict(
         type='LoadImageFromFile',
@@ -142,12 +129,12 @@ data = dict(
         domain_a=domain_a,
         domain_b=domain_b),
     val=dict(
-        dataroot=dataroot,
+        dataroot=dataroot_test,
         domain_a=domain_a,
         domain_b=domain_b,
         pipeline=test_pipeline),
     test=dict(
-        dataroot=dataroot,
+        dataroot=dataroot_test,
         domain_a=domain_a,
         domain_b=domain_b,
         pipeline=test_pipeline))
@@ -173,10 +160,9 @@ runner = None
 use_ddp_wrapper = True
 total_iters = 270000
 workflow = [('train', 1)]
-exp_name = 'cyclegan_moe_linear'
+exp_name = 'cyclegan_moe_linear_id0'
 work_dir = f'./work_dirs/experiments/{exp_name}'
-# testA 120, testB 140
-num_images = 200
+num_images = 100
 metrics = dict(
     FID=dict(type='FID', num_images=num_images, image_shape=(3, 256, 256)),
     IS=dict(

@@ -58,13 +58,15 @@ def convert_xdog(img, sigma=0.8, k=1.6, gamma=0.98, eps=-0.1, phi=200,
     return Image.fromarray(z.astype('uint8'), 'L')
 
 
-def convert_xdog_serial(img, sigma=0.5, k=4.5, gamma=19, eps=0.01, phi=10**9):
+def convert_xdog_serial(img, alg=0.5, k=4.5, gamma=19, eps=0.01, phi=10**9):
     '''
     https://github.com/SerialLain3170/Colorization/blob/c920440413429af588e0b6bd6799640d1feda68e/nohint_pix2pix/xdog.py
     sigma_range=[0.3, 0.4, 0.5], k_sigma=4.5, p=19, eps=0.01, phi=10**9,
     sigma_large = sigma * k_sigma
     p is similar to gamma but also multiplies by first gaussian
     '''
+    sigma = float(alg.split('_')[2])
+
     img = np.array(img.convert('L'))
 
     g_filtered_1 = gaussian(img, sigma)
@@ -165,14 +167,14 @@ def convert_aoda(img, model, image_size=512):
     return out_og_size.convert('L')
 
 
-def convert_pidinet(img, model, alg_name):
+def convert_pidinet(img, model, alg):
     '''
     Pixel Difference Convolutional Networks
     https://github.com/zhuoinoulu/pidinet
     https://arxiv.org/abs/2108.07009
     '''
     device = next(model.parameters()).device
-    filt = int(alg_name.split('_')[1])
+    filt = int(alg.split('_')[1])
 
     tsfm = transforms.Compose([
         transforms.ToTensor(),
@@ -201,8 +203,8 @@ def convert_image(args, img, model=None):
         img_new = convert_xdog(img)
     elif args.preprocess == 'xdog_th':
         img_new = convert_xdog(img, thresh=True)
-    elif args.preprocess == 'xdog_serial':
-        img_new = convert_xdog_serial(img, sigma=args.sigma)
+    elif 'xdog_serial' in args.preprocess:
+        img_new = convert_xdog_serial(img, args.preprocess)
     elif args.preprocess == 'sketchkeras':
         img_new = convert_sketchkeras(img, model)
     elif args.preprocess == 'aoda':
@@ -215,8 +217,8 @@ def convert_image(args, img, model=None):
 
 
 if __name__ == '__main__':
-    algos = ['linear', 'canny', 'xdog', 'xdog_th', 'xdog_serial',
-             'sketchkeras', 'aoda',
+    algos = ['linear', 'canny', 'xdog', 'xdog_th', 'xdog_serial_0.3',
+             'xdog_serial_0.4', 'xdog_serial_0.5', 'sketchkeras', 'aoda',
              'pidinet_-1', 'pidinet_0', 'pidinet_1', 'pidinet_2', 'pidinet_3']
     parser = argparse.ArgumentParser()
     parser.add_argument('--test_path', type=str,
@@ -230,16 +232,9 @@ if __name__ == '__main__':
     img = Image.open(args.test_path)
     fn = osp.splitext(osp.split(osp.normpath(args.test_path))[1])[0]
 
-    sigmas = [0.3, 0.4, 0.5]
-
     for alg in algos:
         args.preprocess = alg
-        if alg == 'xdog_serial':
-            for sigma in sigmas:
-                args.sigma = sigma
-                img_new = convert_image(args, img)
-                img_new.save(osp.join(args.save, f'{fn}_{alg}_{sigma}.jpg'))
-        elif alg == 'sketchkeras':
+        if alg == 'sketchkeras':
             from build_sketchkeras import get_sketchkeras
             model = get_sketchkeras()
             img_new = convert_image(args, img, model)

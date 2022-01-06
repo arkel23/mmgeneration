@@ -2,6 +2,7 @@ import os
 import os.path as osp
 import argparse
 import glob
+import copy
 
 import numpy as np
 from PIL import Image
@@ -13,7 +14,8 @@ from build_aoda import get_aoda
 from build_pidinet import get_pidinet
 
 
-ALGOS_TRAD = ['linear', 'canny', 'xdog', 'xdog_th', 'xdog_serial']
+ALGOS_TRAD = ['linear', 'canny', 'xdog', 'xdog_th', 'xdog_serial_0.3',
+              'xdog_serial_0.4', 'xdog_serial_0.5']
 ALGOS_DL = ['sketchkeras', 'aoda',
             'pidinet_-1', 'pidinet_0', 'pidinet_1', 'pidinet_2', 'pidinet_3']
 ALGOS = ALGOS_TRAD + ALGOS_DL
@@ -36,15 +38,30 @@ def search_images(args):
 
 
 def get_model(args):
-    if args.preprocess in ALGOS_DL:
-        if args.preprocess == 'sketchkeras':
-            model = get_sketchkeras()
-        elif args.preprocess == 'aoda':
-            model = get_aoda()
-        elif 'pidinet' in args.preprocess:
-            model = get_pidinet()
-    else:
-        model = None
+
+    if isinstance(args.preprocess, str):
+        if args.preprocess in ALGOS_DL:
+            if args.preprocess == 'sketchkeras':
+                model = get_sketchkeras()
+            elif args.preprocess == 'aoda':
+                model = get_aoda()
+            elif 'pidinet' in args.preprocess:
+                model = get_pidinet()
+        else:
+            model = None
+    elif isinstance(args.preprocess, list):
+        model = []
+        for alg in args.preprocess:
+            if alg in ALGOS_DL:
+                if alg == 'sketchkeras':
+                    model.append(get_sketchkeras())
+                elif alg == 'aoda':
+                    model.append(get_aoda())
+                elif 'pidinet' in alg:
+                    model.append(get_pidinet())
+            else:
+                model.append(None)
+
     return model
 
 
@@ -55,7 +72,16 @@ def read_image(fp):
     return img
 
 
+def convert_save_single(args, img, model, i, no_train, sub_folder_name, fn):
+    img_new = convert_image(args, img, model)
+
+    folder_name = get_save_folder_name(i, no_train, args, sub_folder_name)
+    save_image(args, img, img_new, folder_name, fn)
+
+
 def get_save_folder_name(i, no_train, args, sub_folder_name):
+    sub_folder_name = f'{sub_folder_name}_{args.preprocess}'
+
     if args.unpaired:
         if i < no_train:
             folder_name = osp.join(args.path_save, 'trainDOM', sub_folder_name)
@@ -121,10 +147,16 @@ def preprocess_folder(args):
         abs_path, fn = osp.split(osp.normpath(fp))
         _, sub_folder_name = osp.split(abs_path)
         img = read_image(fp)
-        img_new = convert_image(args, img, model)
 
-        folder_name = get_save_folder_name(i, no_train, args, sub_folder_name)
-        save_image(args, img, img_new, folder_name, fn)
+        if isinstance(args.preprocess, str):
+            convert_save_single(
+                args, img, model, i, no_train, sub_folder_name, fn)
+        else:
+            for j, alg in enumerate(args.preprocess):
+                args_copy = copy.deepcopy(args)
+                args_copy.preprocess = alg
+                convert_save_single(
+                    args_copy, img, model[j], i, no_train, sub_folder_name, fn)
 
         if i % args.print_freq == 0:
             print(f'{i}/{len(files_all)}: {fp}')
@@ -145,10 +177,8 @@ def main():
 
     parser.add_argument('--unpaired', action='store_true',
                         help='Use for unpaired (cycleGAN style) datasets')
-    parser.add_argument('--preprocess', type=str, choices=ALGOS,
+    parser.add_argument('--preprocess', nargs='+', type=str, choices=ALGOS,
                         default='linear', help='greyscale/sketch conversion')
-    parser.add_argument('--sigma', type=float, default=0.3, 
-                        choices=[0.3, 0.4, 0.5], help='sigma for xdog_serial')
 
     parser.add_argument('--train', type=float, default=0.99,
                         help='percent of data for training')
