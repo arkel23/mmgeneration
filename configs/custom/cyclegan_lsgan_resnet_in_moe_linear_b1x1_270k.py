@@ -176,7 +176,7 @@ workflow = [('train', 1)]
 exp_name = 'cyclegan_moe_linear'
 work_dir = f'./work_dirs/experiments/{exp_name}'
 # testA 120, testB 140
-num_images = 140
+num_images = 200
 metrics = dict(
     FID=dict(type='FID', num_images=num_images, image_shape=(3, 256, 256)),
     IS=dict(
@@ -197,3 +197,12 @@ evaluation = dict(
             inception_args=dict(type='pytorch'))
     ],
     best_metric=['fid', 'is'])
+
+# log
+log_config = dict(
+    by_epoch=True,
+    interval=50,
+    hooks=[
+        dict(type='TextLoggerHook'),
+        dict(type='WandbLoggerHook')
+    ])
