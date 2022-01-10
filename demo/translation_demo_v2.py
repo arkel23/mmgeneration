@@ -17,6 +17,23 @@ from mmgen.models import BaseTranslationModel
 # yapf: enable
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Translation demo')
+    parser.add_argument('config', help='test config file path')
+    parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('image_path', help='Image file path')
+    parser.add_argument(
+        '--target-domain', type=str, default=None, help='Desired image domain')
+    parser.add_argument(
+        '--save-path', type=str, default=None,
+        help='path to save translation sample')
+    parser.add_argument(
+        '--device', type=str, default='cuda:0', help='CUDA device id')
+
+    args = parser.parse_args()
+    return args
+
+
 def sample_img2img_model(model, image_path, target_domain=None, **kwargs):
     """Sampling from translation models.
 
@@ -64,29 +81,23 @@ def sample_img2img_model(model, image_path, target_domain=None, **kwargs):
     return output
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='Translation demo')
-    parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
-    parser.add_argument('image_path', help='Image file path')
-    parser.add_argument(
-        '--target-domain', type=str, default=None, help='Desired image domain')
-    parser.add_argument(
-        '--save-path',
-        type=str,
-        default='./work_dirs/demos/translation_sample.png',
-        help='path to save translation sample')
-    parser.add_argument(
-        '--device', type=str, default='cuda:0', help='CUDA device id')
-    # args for inference/sampling
-    parser.add_argument(
-        '--sample-cfg',
-        nargs='+',
-        action=DictAction,
-        help='Other customized kwargs for sampling function')
+def get_full_save_path(save_path, image_path, ckpt_path):
+    if save_path is None:
+        save_path = os.path.join('work_dirs', 'demos')
 
-    args = parser.parse_args()
-    return args
+    fn = os.path.splitext(os.path.split(os.path.normpath(image_path))[1])[0]
+
+    abs_path, _ = os.path.split(ckpt_path)
+    _, ckpt_folder_name = os.path.split(abs_path)
+    segments = ckpt_folder_name.split('_')
+    if 'serial' in segments or 'pidinet' in segments or 'th' == segments[-1]:
+        method_name = '{}_{}'.format(segments[-2], segments[-1])
+    else:
+        method_name = segments[-1]
+
+    new_fn = f'{fn}_{method_name}.jpg'
+    full_save_path = os.path.join(save_path, new_fn)
+    return full_save_path
 
 
 def main():
@@ -94,14 +105,12 @@ def main():
     model = init_model(
         args.config, checkpoint=args.checkpoint, device=args.device)
 
-    if args.sample_cfg is None:
-        args.sample_cfg = dict()
-
-    results = sample_img2img_model(model, args.image_path, args.target_domain,
-                                   **args.sample_cfg)
+    results = sample_img2img_model(model, args.image_path, args.target_domain)
     results = (results[:, [2, 1, 0]] + 1.) / 2.
 
     # save images
+    args.save_path = get_full_save_path(
+        args.save_path, args.image_path, args.checkpoint)
     mmcv.mkdir_or_exist(os.path.dirname(args.save_path))
     utils.save_image(results, args.save_path)
 
