@@ -42,11 +42,12 @@ def main():
     if args.ckpt_sketch:
         gdd.download_file_from_google_drive(
             file_id='1Zo88NmWoAitO7DnyBrRhKXPcHyMAZS97',
-            dest_path='./model.pth', unzip=False)
+            dest_path='./ckpts/model_sketch.pth', unzip=False)
+        # gdown 1Zo88NmWoAitO7DnyBrRhKXPcHyMAZS97 -O ckpts/model_sketch.pth
     if args.ckpt_aoda:
         gdd.download_file_from_google_drive(
             file_id='1RILKwUdjjBBngB17JHwhZNBEaW4Mr-Ml',
-            dest_path='./model.pth', unzip=False)
+            dest_path='./ckpts/model_aoda.pth', unzip=False)
 
 
 if __name__ == '__main__':

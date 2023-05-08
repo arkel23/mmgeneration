@@ -131,7 +131,7 @@ def create_aoda():
     norm_layer = functools.partial(nn.InstanceNorm2d, affine=False,
                                    track_running_stats=False)
     net = UnetGenerator(3, 1, 8, 64, norm_layer=norm_layer, use_dropout=False)
-    ckpt = torch.load(os.path.join('ckpt', 'netG.pth'), map_location='cpu')
+    ckpt = torch.load(os.path.join('ckpts', 'model_aoda.pth'), map_location='cpu')
     for key in list(ckpt.keys()):
         if 'module.' in key:
             ckpt[key.replace('module.', '')] = ckpt[key]

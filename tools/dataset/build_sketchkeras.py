@@ -8,7 +8,7 @@ from models_sketchkeras import SketchKeras
 
 
 def get_args():
-    dic = {'ckpt': os.path.join('ckpt', 'model.pth')}
+    dic = {'ckpt': os.path.join('ckpts', 'model_sketch.pth')}
     args = SimpleNamespace(**dic)
 
     args.device = 'cuda' if torch.cuda.is_available() else 'cpu'

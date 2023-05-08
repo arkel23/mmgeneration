@@ -82,7 +82,9 @@ def convert_save_single(args, img, model, i, no_train, sub_folder_name, fn):
 def get_save_folder_name(i, no_train, args, sub_folder_name):
     sub_folder_name = f'{sub_folder_name}_{args.preprocess}'
 
-    if args.unpaired:
+    if args.save_processed_only:
+        folder_name = osp.join(args.path_save, sub_folder_name)
+    elif args.unpaired:
         if i < no_train:
             folder_name = osp.join(args.path_save, 'trainDOM', sub_folder_name)
         else:
@@ -97,7 +99,9 @@ def get_save_folder_name(i, no_train, args, sub_folder_name):
 
 
 def save_image(args, img, img_new, folder_name, fn):
-    if args.unpaired:
+    if args.save_processed_only:
+        save_image_processed_only(args.res_hw, img_new, folder_name, fn)  
+    elif args.unpaired:
         save_image_unpaired(args.res_hw, img, img_new, folder_name, fn)
     else:
         save_image_paired(args.res_hw, img, img_new, folder_name, fn)
@@ -133,6 +137,15 @@ def save_image_unpaired(res_hw, img, img_new, folder_name, fn):
     os.makedirs(osp.join(new_folder_name), exist_ok=True)
     new_fn = osp.join(new_folder_name, fn)
     img.save(new_fn)
+
+
+def save_image_processed_only(res_hw, img_new, folder_name, fn):
+    img_new = resize(np.array(img_new), (res_hw, res_hw)) * 255
+    img_new = Image.fromarray(img_new.astype('uint8'), 'L')
+
+    os.makedirs(osp.join(folder_name), exist_ok=True)
+    new_fn = osp.join(folder_name, fn)
+    img_new.save(new_fn)
 
 
 def preprocess_folder(args):
@@ -175,6 +188,8 @@ def main():
     parser.add_argument('--print_freq',
                         type=int, default=1000, help='printfreq')
 
+    parser.add_argument('--save_processed_only', action='store_true',
+                        help='save processed images only')
     parser.add_argument('--unpaired', action='store_true',
                         help='Use for unpaired (cycleGAN style) datasets')
     parser.add_argument('--preprocess', nargs='+', type=str, choices=ALGOS,
